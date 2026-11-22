@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-pcb="emerald">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SILICON // Cruzadinha & Quiz de Arquitetura Computacional</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="pcb-canvas"></canvas>
+
+    <section id="landing-view" class="landing-view">
+        <header class="landing-nav">
+            <div class="chip-brand">
+                <span class="chip-pin"></span>
+                <span>SILICON // ARQCOMP SPRINT 3</span>
+            </div>
+
+            <div class="theme-bar" role="group" aria-label="Cor da placa">
+                <button class="pcb-swatch active" data-pcb-theme="emerald" type="button">PCB VERDE</button>
+                <button class="pcb-swatch" data-pcb-theme="blueprint" type="button">BLUEPRINT</button>
+                <button class="pcb-swatch" data-pcb-theme="amber" type="button">ÂMBAR</button>
+                <button class="pcb-swatch" data-pcb-theme="uv" type="button">ULTRAVIOLETA</button>
+            </div>
+        </header>
+
+        <main class="landing-hero">
+            <div class="hero-left">
+                <div class="status-ribbon">
+                    <span class="led"></span>
+                    <span>SISTEMA PRONTO • 14 PALAVRAS + QUIZ 12 QUESTÕES</span>
+                </div>
+
+                <h1 class="mega-title">
+                    ARQUITETURA<br>
+                    EM <span>SILÍCIO.</span>
+                </h1>
+
+                <p class="hero-lead">
+                    Decifre os barramentos, memórias e unidades internas da CPU em um tabuleiro encaixado direto na placa-mãe ou teste seus reflexos no Quiz de Arquitetura Computacional.
+                </p>
+
+                <div class="entry-buttons">
+                    <button id="enter-crossword" class="cta-main" type="button">
+                        <span class="cta-icon">❖</span>
+                        <span>ENTRAR NA CRUZADINHA</span>
+                    </button>
+
+                    <button id="enter-quiz" class="cta-alt" type="button">
+                        <span>INICIAR QUIZ ARQCOMP</span>
+                        <span>→</span>
+                    </button>
+
+                    <button id="open-manual" class="cta-ghost" type="button">
+                        MANUAL DOS 16 TERMOS
+                    </button>
+                </div>
+            </div>
+
+            <div class="cpu-socket-showcase" id="cpu-showcase">
+                <div class="socket-frame">
+                    <div class="socket-header">
+                        <span>SOCKET LGA-2026</span>
+                        <span>BUS: 64-BIT</span>
+                    </div>
+                    <div class="silicon-die">
+                        <div class="die-core">
+                            <span class="die-label">CORE 0</span>
+                            <strong>ULA + UC</strong>
+                        </div>
+                        <div class="die-core">
+                            <span class="die-label">L1 CACHE</span>
+                            <strong>SRAM</strong>
+                        </div>
+                        <div class="die-core">
+                            <span class="die-label">BUS I/O</span>
+                            <strong>DMA</strong>
+                        </div>
+                        <div class="die-core">
+                            <span class="die-label">MEMÓRIA</span>
+                            <strong>RAM / ROM</strong>
+                        </div>
+                    </div>
+                    <div class="socket-footer">
+                        <span>CLIQUE PARA PULSAR CLOCK</span>
+                        <span id="clock-hz">4.20 GHz</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="landing-foot">
+            <span>HTML5 • CSS3 • JAVASCRIPT PURO</span>
+            <span>CLIQUE NA PLACA OU MOVA O CURSOR PARA INJETAR PULSOS ELÉTRICOS</span>
+        </footer>
+    </section>
+
+    <div id="workspace-shell" class="workspace-shell hidden">
+        <header class="top-dock">
+            <div class="dock-left">
+                <button id="btn-to-landing" class="dock-chip" type="button">← TELA INICIAL</button>
+                <span class="dock-logo">SILICON</span>
+            </div>
+
+            <nav class="dock-tabs" aria-label="Alternar atividade">
+                <button class="mode-tab active" data-target="crossword-stage" type="button">
+                    01. CRUZADINHA
+                </button>
+                <button class="mode-tab" data-target="quiz-stage" type="button">
+                    02. QUIZ ARQCOMP (12)
+                </button>
+            </nav>
+
+            <div class="dock-right">
+                <div class="theme-bar mini">
+                    <button class="pcb-swatch active" data-pcb-theme="emerald" type="button">PCB</button>
+                    <button class="pcb-swatch" data-pcb-theme="blueprint" type="button">BLU</button>
+                    <button class="pcb-swatch" data-pcb-theme="amber" type="button">AMB</button>
+                    <button class="pcb-swatch" data-pcb-theme="uv" type="button">UV</button>
+                </div>
+                <button id="btn-audio-toggle" class="dock-chip" type="button">SOM: ON</button>
+            </div>
+        </header>
+
+        <main id="crossword-stage" class="stage-container">
+            <div class="telemetry-bar">
+                <div class="telemetry-score">
+                    <span class="t-label">CIRCUITOS ATIVOS</span>
+                    <strong id="score-counter" class="t-value">0 de 14 palavras</strong>
+                </div>
+
+                <div class="active-hint-pill">
+                    <span id="current-dir-tag" class="dir-pill">HORIZONTAL 1</span>
+                    <p id="current-clue-text">Chip completo com processador, memória e portas de entrada e saída integrados.</p>
+                </div>
+
+                <div class="telemetry-actions">
+                    <button id="btn-hint-letter" class="action-btn subtle" type="button" title="Revela a letra atual (Tecla D)">
+                        DICA [D]
+                    </button>
+                    <button id="btn-check" class="action-btn primary" type="button">
+                        CONFERIR
+                    </button>
+                    <button id="btn-reset" class="action-btn subtle" type="button">
+                        REINICIAR
+                    </button>
+                </div>
+            </div>
+
+            <section class="tri-arena">
+                <aside class="clue-wing left-wing">
+                    <div class="wing-header">
+                        <span class="wing-dot"></span>
+                        <h2>HORIZONTAIS</h2>
+                    </div>
+                    <ul id="clues-across" class="wing-list"></ul>
+                </aside>
+
+                <div class="center-socket">
+                    <div class="socket-bezel" id="socket-bezel">
+                        <div id="crossword-grid" class="pcb-grid" role="grid" aria-label="Tabuleiro de palavras cruzadas"></div>
+                    </div>
+                    <div class="socket-caption">
+                        <span><strong>SETAS</strong> movem</span>
+                        <span><strong>ESPAÇO</strong> gira direção</span>
+                        <span><strong>ENTER</strong> confere</span>
+                    </div>
+                </div>
+
+                <aside class="clue-wing right-wing">
+                    <div class="wing-header">
+                        <span class="wing-dot"></span>
+                        <h2>VERTICAIS</h2>
+                    </div>
+                    <ul id="clues-down" class="wing-list"></ul>
+                </aside>
+            </section>
+        </main>
+
+        <section id="quiz-stage" class="stage-container hidden">
+            <div class="quiz-arena">
+                <div class="quiz-hud">
+                    <div class="q-stat">
+                        <span>QUESTÃO</span>
+                        <strong id="quiz-progress">01 / 12</strong>
+                    </div>
+                    <div class="q-stat">
+                        <span>PONTUAÇÃO</span>
+                        <strong id="quiz-points">0 pts</strong>
+                    </div>
+                    <div class="q-stat">
+                        <span>SEQUÊNCIA</span>
+                        <strong id="quiz-streak">0x</strong>
+                    </div>
+                    <div class="q-stat">
+                        <span>TEMPO</span>
+                        <strong id="quiz-timer">20s</strong>
+                    </div>
+                </div>
+
+                <div class="quiz-timer-track">
+                    <div id="quiz-timer-fill" class="quiz-timer-fill"></div>
+                </div>
+
+                <div id="quiz-body" class="quiz-body">
+                    <span id="quiz-topic-badge" class="topic-chip">BARRAMENTOS</span>
+                    <h2 id="quiz-question-text" class="quiz-q-text">Carregando pergunta...</h2>
+
+                    <div id="quiz-options-grid" class="quiz-options-grid"></div>
+
+                    <div id="quiz-explanation" class="quiz-explanation hidden"></div>
+
+                    <div class="quiz-controls">
+                        <button id="btn-next-question" class="action-btn primary hidden" type="button">
+                            PRÓXIMA QUESTÃO →
+                        </button>
+                    </div>
+                </div>
+
+                <div id="quiz-summary" class="quiz-summary hidden">
+                    <span class="topic-chip">RELATÓRIO DE DESEMPENHO</span>
+                    <h2 id="quiz-final-title">Simulação Concluída!</h2>
+                    <p id="quiz-final-desc">Você acertou 12 questões.</p>
+                    <div class="summary-actions">
+                        <button id="btn-restart-quiz" class="action-btn primary" type="button">JOGAR QUIZ NOVAMENTE</button>
+                        <button id="btn-go-crossword" class="action-btn subtle" type="button">IR PARA CRUZADINHA</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="manual-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+        <div class="modal-panel wide">
+            <div class="modal-header">
+                <div>
+                    <span class="topic-chip">DOCUMENTAÇÃO TÉCNICA</span>
+                    <h2>16 CONCEITOS DE ARQUITETURA COMPUTACIONAL</h2>
+                </div>
+                <button id="btn-close-manual" class="dock-chip" type="button">FECHAR ✕</button>
+            </div>
+            <div id="manual-cards" class="manual-cards"></div>
+        </div>
+    </div>
+
+    <div id="victory-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+        <div class="modal-panel center">
+            <span class="topic-chip">100% SINCRONIZADO</span>
+            <h2>14 DE 14 PALAVRAS!</h2>
+            <p>Todos os circuitos da cruzadinha foram ativados com sucesso.</p>
+            <div class="summary-actions">
+                <button id="btn-victory-quiz" class="action-btn primary" type="button">TESTAR NO QUIZ →</button>
+                <button id="btn-victory-close" class="action-btn subtle" type="button">CONTINUAR AQUI</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
