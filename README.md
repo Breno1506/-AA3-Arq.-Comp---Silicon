@@ -8,7 +8,7 @@
 
 O projeto está publicado e pronto para jogar diretamente no navegador via GitHub Pages:
 
-👉 **[Acessar SILICON // Arquitetura em Silício]([https://breno1506.github.io/-AA3-ArqComp/](https://breno1506.github.io/-AA3-Arq.-Comp---Silicon/))**
+👉 **[Acessar SILICON // Arquitetura em Silício](https://breno1506.github.io/-AA3-Arq.-Comp---Silicon/)**
 
 ---
 
