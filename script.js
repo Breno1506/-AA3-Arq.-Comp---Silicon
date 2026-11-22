@@ -209,3 +209,304 @@ document.querySelectorAll(".mode-tab").forEach((tab) => {
         switchStage(tab.dataset.target);
     });
 });
+
+/* =========================================================
+   PARTE 2: CRUZADINHA DE ARQUITETURA COMPUTACIONAL (14 PALAVRAS)
+   ========================================================= */
+const GRID_DIM = 16;
+const WORDS = [
+    { number: 1, word: "MICROCONTROLADOR", direction: "across", row: 0, col: 0, clue: "Chip completo com processador, memória e portas de entrada e saída integrados." },
+    { number: 2, word: "MEMORIADEMASSA", direction: "down", row: 0, col: 0, clue: "Armazenamento secundário não volátil de grande capacidade, como HD ou SSD." },
+    { number: 3, word: "CACHE", direction: "down", row: 0, col: 2, clue: "Memória ultrarrápida próxima ao processador que guarda dados acessados com frequência." },
+    { number: 4, word: "ROM", direction: "down", row: 0, col: 3, clue: "Memória não volátil apenas de leitura que guarda instruções básicas de inicialização." },
+    { number: 5, word: "RAM", direction: "down", row: 0, col: 13, clue: "Memória principal volátil de acesso aleatório usada durante a execução de programas." },
+    { number: 6, word: "ULA", direction: "across", row: 2, col: 12, clue: "Parte do processador responsável pelos cálculos matemáticos e testes lógicos." },
+    { number: 7, word: "DMA", direction: "across", row: 4, col: 0, clue: "Recurso que permite periféricos transferirem dados à memória sem sobrecarregar o processador." },
+    { number: 8, word: "ADDRESSBUS", direction: "down", row: 4, col: 2, clue: "Via unidirecional que transporta a localização física de onde ler ou gravar dados." },
+    { number: 9, word: "REGISTRADORES", direction: "across", row: 6, col: 0, clue: "Pequenas unidades de armazenamento interno mais rápidas que existem dentro do processador." },
+    { number: 10, word: "QUADCORE", direction: "down", row: 6, col: 12, clue: "Processador equipado com quatro núcleos físicos independentes para executar tarefas simultâneas." },
+    { number: 11, word: "FLASH", direction: "across", row: 11, col: 0, clue: "Memória não volátil regravável em blocos, muito usada em pendrives e SSDs." },
+    { number: 12, word: "DATABUS", direction: "across", row: 13, col: 0, clue: "Via bidirecional por onde trafegam as informações entre processador, memória e periféricos." },
+    { number: 13, word: "CPU", direction: "down", row: 13, col: 8, clue: "Cérebro do computador que busca, decodifica e executa as instruções dos programas." },
+    { number: 14, word: "DUALCORE", direction: "across", row: 15, col: 7, clue: "Processador que possui dois núcleos físicos trabalhando em conjunto no mesmo chip." }
+];
+
+const gridContainer = document.getElementById("crossword-grid");
+const acrossList = document.getElementById("clues-across");
+const downList = document.getElementById("clues-down");
+const scoreCounter = document.getElementById("score-counter");
+
+const matrix = Array.from({ length: GRID_DIM }, () =>
+    Array.from({ length: GRID_DIM }, () => ({
+        letter: null,
+        number: null,
+        words: [],
+        inputEl: null,
+        cellEl: null
+    }))
+);
+
+let currentDir = "across";
+let activePos = { r: 0, c: 0 };
+
+function buildCrossword() {
+    WORDS.forEach((item) => {
+        for (let i = 0; i < item.word.length; i++) {
+            const r = item.direction === "across" ? item.row : item.row + i;
+            const c = item.direction === "across" ? item.col + i : item.col;
+            matrix[r][c].letter = item.word[i];
+            matrix[r][c].words.push(item);
+            if (i === 0) matrix[r][c].number = item.number;
+        }
+    });
+
+    gridContainer.innerHTML = "";
+    for (let r = 0; r < GRID_DIM; r++) {
+        for (let c = 0; c < GRID_DIM; c++) {
+            const cell = matrix[r][c];
+            const div = document.createElement("div");
+            div.className = "cell";
+
+            if (!cell.letter) {
+                div.classList.add("empty");
+            } else {
+                div.classList.add("pin-cell");
+                if (cell.number !== null) {
+                    const idx = document.createElement("span");
+                    idx.className = "cell-idx";
+                    idx.textContent = cell.number;
+                    div.appendChild(idx);
+                }
+
+                const inp = document.createElement("input");
+                inp.type = "text";
+                inp.maxLength = 1;
+                inp.autocomplete = "off";
+                inp.addEventListener("focus", () => onCellFocus(r, c));
+                inp.addEventListener("input", (e) => onCellInput(e, r, c));
+                inp.addEventListener("keydown", (e) => onCellKey(e, r, c));
+
+                div.appendChild(inp);
+                cell.inputEl = inp;
+            }
+            cell.cellEl = div;
+            gridContainer.appendChild(div);
+        }
+    }
+
+    acrossList.innerHTML = "";
+    downList.innerHTML = "";
+    WORDS.forEach((item) => {
+        const li = document.createElement("li");
+        li.className = "clue-card";
+        li.dataset.number = item.number;
+        li.dataset.direction = item.direction;
+        li.innerHTML = `<span class="clue-tag-num">${item.number}.</span> ${item.clue}`;
+
+        li.addEventListener("click", () => {
+            sfx.tap();
+            currentDir = item.direction;
+            highlightActiveWord(item);
+            matrix[item.row][item.col].inputEl.focus();
+        });
+
+        (item.direction === "across" ? acrossList : downList).appendChild(li);
+    });
+
+    highlightActiveWord(WORDS[0]);
+}
+
+function onCellFocus(r, c) {
+    activePos = { r, c };
+    const cellWords = matrix[r][c].words;
+    if (!cellWords.length) return;
+    const match = cellWords.find((w) => w.direction === currentDir) || cellWords[0];
+    currentDir = match.direction;
+    highlightActiveWord(match);
+}
+
+function highlightActiveWord(wordObj) {
+    document.querySelectorAll(".cell.word-band").forEach((el) => el.classList.remove("word-band"));
+    document.querySelectorAll(".clue-card.selected").forEach((el) => el.classList.remove("selected"));
+
+    for (let i = 0; i < wordObj.word.length; i++) {
+        const r = wordObj.direction === "across" ? wordObj.row : wordObj.row + i;
+        const c = wordObj.direction === "across" ? wordObj.col + i : wordObj.col;
+        matrix[r][c].cellEl.classList.add("word-band");
+    }
+
+    document.getElementById("current-dir-tag").textContent =
+        `${wordObj.direction === "across" ? "HORIZONTAL" : "VERTICAL"} ${wordObj.number}`;
+    document.getElementById("current-clue-text").textContent = wordObj.clue;
+
+    const card = document.querySelector(`.clue-card[data-number="${wordObj.number}"][data-direction="${wordObj.direction}"]`);
+    if (card) {
+        card.classList.add("selected");
+        card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+}
+
+function onCellInput(e, r, c) {
+    const clean = e.target.value.replace(/[^a-zA-Z]/g, "").toUpperCase();
+    e.target.value = clean;
+    const cellEl = matrix[r][c].cellEl;
+    cellEl.classList.remove("correct", "wrong", "pop");
+    void cellEl.offsetWidth;
+    cellEl.classList.add("pop");
+
+    if (clean) {
+        sfx.tap();
+        advanceFocus(r, c, 1);
+    }
+}
+
+function onCellKey(e, r, c) {
+    if (e.key === " ") {
+        e.preventDefault();
+        if (matrix[r][c].words.length > 1) {
+            currentDir = currentDir === "across" ? "down" : "across";
+            onCellFocus(r, c);
+            sfx.tap();
+        }
+    } else if (e.key === "Enter") {
+        e.preventDefault();
+        verifyAnswers();
+    } else if (e.key === "Backspace" && !e.target.value) {
+        e.preventDefault();
+        advanceFocus(r, c, -1);
+    } else if (e.key === "ArrowRight") {
+        e.preventDefault(); currentDir = "across"; moveCursor(r, c, 0, 1);
+    } else if (e.key === "ArrowLeft") {
+        e.preventDefault(); currentDir = "across"; moveCursor(r, c, 0, -1);
+    } else if (e.key === "ArrowDown") {
+        e.preventDefault(); currentDir = "down"; moveCursor(r, c, 1, 0);
+    } else if (e.key === "ArrowUp") {
+        e.preventDefault(); currentDir = "down"; moveCursor(r, c, -1, 0);
+    }
+}
+
+function advanceFocus(r, c, step) {
+    const nr = currentDir === "down" ? r + step : r;
+    const nc = currentDir === "across" ? c + step : c;
+    if (matrix[nr]?.[nc]?.inputEl) matrix[nr][nc].inputEl.focus();
+}
+
+function moveCursor(r, c, dr, dc) {
+    const nr = r + dr;
+    const nc = c + dc;
+    if (matrix[nr]?.[nc]?.inputEl) matrix[nr][nc].inputEl.focus();
+}
+
+function revealSingleLetter() {
+    const cell = matrix[activePos.r]?.[activePos.c];
+    if (!cell?.inputEl) return;
+    cell.inputEl.value = cell.letter;
+    cell.cellEl.classList.remove("wrong");
+    cell.cellEl.classList.add("correct");
+    sfx.ok();
+    advanceFocus(activePos.r, activePos.c, 1);
+}
+
+document.getElementById("btn-hint-letter").addEventListener("click", revealSingleLetter);
+
+window.addEventListener("keydown", (e) => {
+    if (e.key.toLowerCase() === "d" && document.activeElement.tagName !== "INPUT") {
+        revealSingleLetter();
+    }
+});
+
+function verifyAnswers() {
+    let solvedTotal = 0;
+
+    for (let r = 0; r < GRID_DIM; r++) {
+        for (let c = 0; c < GRID_DIM; c++) {
+            matrix[r][c].cellEl?.classList.remove("correct", "wrong");
+        }
+    }
+
+    const checks = WORDS.map((item) => {
+        let isRight = true;
+        let hasInput = false;
+        const cells = [];
+
+        for (let i = 0; i < item.word.length; i++) {
+            const r = item.direction === "across" ? item.row : item.row + i;
+            const c = item.direction === "across" ? item.col + i : item.col;
+            const cell = matrix[r][c];
+            const val = cell.inputEl.value.toUpperCase();
+            if (val !== "") hasInput = true;
+            if (val !== item.word[i]) isRight = false;
+            cells.push(cell);
+        }
+
+        const card = document.querySelector(`.clue-card[data-number="${item.number}"][data-direction="${item.direction}"]`);
+        if (isRight) {
+            solvedTotal++;
+            card?.classList.add("solved");
+        } else {
+            card?.classList.remove("solved");
+        }
+
+        return { isRight, hasInput, cells };
+    });
+
+    checks.forEach(({ isRight, hasInput, cells }) => {
+        if (!isRight && hasInput) {
+            cells.forEach((cell) => {
+                if (cell.inputEl.value !== "") cell.cellEl.classList.add("wrong");
+            });
+        }
+    });
+
+    checks.forEach(({ isRight, cells }) => {
+        if (isRight) {
+            cells.forEach((cell) => {
+                cell.cellEl.classList.remove("wrong");
+                cell.cellEl.classList.add("correct");
+            });
+        }
+    });
+
+    scoreCounter.textContent = `${solvedTotal} de ${WORDS.length} palavras`;
+
+    const bezelRect = document.getElementById("socket-bezel").getBoundingClientRect();
+    if (solvedTotal === WORDS.length) {
+        sfx.win();
+        spawnSpark(bezelRect.left + bezelRect.width / 2, bezelRect.top + bezelRect.height / 2, 45);
+        document.getElementById("victory-modal").classList.remove("hidden");
+    } else if (solvedTotal > 0) {
+        sfx.ok();
+        spawnSpark(bezelRect.left + bezelRect.width / 2, bezelRect.top + 30, 18);
+    } else {
+        sfx.err();
+    }
+}
+
+function resetCrossword() {
+    sfx.tap();
+    for (let r = 0; r < GRID_DIM; r++) {
+        for (let c = 0; c < GRID_DIM; c++) {
+            const cell = matrix[r][c];
+            if (cell.inputEl) {
+                cell.inputEl.value = "";
+                cell.cellEl.classList.remove("correct", "wrong");
+            }
+        }
+    }
+    document.querySelectorAll(".clue-card.solved").forEach((el) => el.classList.remove("solved"));
+    scoreCounter.textContent = `0 de ${WORDS.length} palavras`;
+    highlightActiveWord(WORDS[0]);
+    matrix[WORDS[0].row][WORDS[0].col].inputEl.focus();
+}
+
+document.getElementById("btn-check").addEventListener("click", verifyAnswers);
+document.getElementById("btn-reset").addEventListener("click", resetCrossword);
+document.getElementById("btn-victory-close").addEventListener("click", () => {
+    document.getElementById("victory-modal").classList.add("hidden");
+});
+document.getElementById("btn-victory-quiz").addEventListener("click", () => {
+    document.getElementById("victory-modal").classList.add("hidden");
+    switchStage("quiz-stage");
+});
+
+buildCrossword();
