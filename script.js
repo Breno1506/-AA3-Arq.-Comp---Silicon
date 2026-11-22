@@ -510,3 +510,244 @@ document.getElementById("btn-victory-quiz").addEventListener("click", () => {
 });
 
 buildCrossword();
+
+/* =========================================================
+   PARTE 3: QUIZ DE ARQUITETURA COMPUTACIONAL (12 QUESTÕES)
+   ========================================================= */
+const ARQCOMP_QUIZ = [
+    {
+        topic: "PROCESSADOR",
+        q: "Qual componente da CPU é responsável por realizar somas, subtrações e comparações lógicas?",
+        options: ["ULA (Unidade Lógica e Aritmética)", "UC (Unidade de Controle)", "ROM", "Address Bus"],
+        answer: 0,
+        explain: "A ULA executa todas as operações matemáticas e lógicas requisitadas pelas instruções."
+    },
+    {
+        topic: "MEMÓRIA INTERNA",
+        q: "Qual é a memória mais rápida dentro de um computador, localizada diretamente no interior do núcleo da CPU?",
+        options: ["Memória Cache L3", "Registradores", "Memória RAM DDR5", "SSD NVMe"],
+        answer: 1,
+        explain: "Os registradores ficam dentro da própria CPU e armazenam operandos imediatos em velocidade máxima."
+    },
+    {
+        topic: "BARRAMENTOS",
+        q: "Por que o Address Bus (Barramento de Endereços) é geralmente unidirecional?",
+        options: [
+            "Porque apenas a RAM envia endereços para o monitor",
+            "Porque a CPU especifica o endereço de memória onde deseja ler ou gravar",
+            "Porque ele transporta apenas energia elétrica",
+            "Porque só funciona em processadores Dual Core"
+        ],
+        answer: 1,
+        explain: "A CPU determina qual posição de memória será acessada e envia esse endereço pelo Address Bus."
+    },
+    {
+        topic: "TRANSFERÊNCIA DE DADOS",
+        q: "Qual tecnologia permite que um periférico transfira dados direto para a RAM sem ocupar a CPU a cada byte?",
+        options: ["EEPROM", "DMA (Direct Memory Access)", "ULA", "Clock Multiplier"],
+        answer: 1,
+        explain: "O controlador de DMA assume a transferência entre E/S e memória principal, liberando a CPU."
+    },
+    {
+        topic: "MEMÓRIAS NÃO VOLÁTEIS",
+        q: "Qual memória não volátil pode ser apagada e regravada eletricamente byte a byte?",
+        options: ["RAM", "Cache L1", "EEPROM", "Registrador"],
+        answer: 2,
+        explain: "A EEPROM (Electrically Erasable Programmable ROM) permite apagar e gravar bytes via pulsos elétricos."
+    },
+    {
+        topic: "HIERARQUIA DE MEMÓRIA",
+        q: "Qual é a principal função da memória Cache entre a CPU e a RAM?",
+        options: [
+            "Substituir o HD permanentemente",
+            "Armazenar cópias de dados frequentes para reduzir a latência de acesso",
+            "Controlar a rotação das ventoinhas",
+            "Converter sinais analógicos em digitais"
+        ],
+        answer: 1,
+        explain: "Como a RAM é muito mais lenta que a CPU, a Cache guarda os dados mais usados perto dos núcleos."
+    },
+    {
+        topic: "CONTROLE DA CPU",
+        q: "Qual unidade busca a instrução na memória, decodifica o opcode e coordena os sinais para executá-la?",
+        options: ["Unidade de Controle (UC)", "Memória Flash", "Data Bus", "Memória de Massa"],
+        answer: 0,
+        explain: "A Unidade de Controle orquestra o ciclo Fetch-Decode-Execute dentro do processador."
+    },
+    {
+        topic: "SISTEMAS EMBARCADOS",
+        q: "Qual componente integra CPU, memória RAM/Flash e portas de entrada/saída em um único chip?",
+        options: ["Microcontrolador", "Barramento de Dados", "Disco Rígido", "Cache L2"],
+        answer: 0,
+        explain: "Microcontroladores (como os usados em placas Arduino) reúnem todo o sistema em um único encapsulamento."
+    },
+    {
+        topic: "ARMAZENAMENTO",
+        q: "HDs e SSDs são classificados na arquitetura de computadores como:",
+        options: ["Registradores", "Memória Volátil", "Memória de Massa", "Barramento de Controle"],
+        answer: 2,
+        explain: "Memória de massa refere-se ao armazenamento secundário permanente de grande capacidade."
+    },
+    {
+        topic: "BARRAMENTOS",
+        q: "Por qual barramento trafegam efetivamente os bytes lidos da RAM ou enviados para gravação?",
+        options: ["Data Bus", "Address Bus", "Power Bus", "Reset Line"],
+        answer: 0,
+        explain: "O Data Bus é bidirecional e transporta os dados entre processador, memória e periféricos."
+    },
+    {
+        topic: "MULTIPROCESSAMENTO",
+        q: "Qual a diferença estrutural entre um processador Dual Core e um Quad Core?",
+        options: [
+            "O Dual Core não possui ULA",
+            "O Quad Core possui 4 núcleos físicos independentes, enquanto o Dual Core possui 2",
+            "O Dual Core usa apenas memória ROM",
+            "O Quad Core dispensa barramento de dados"
+        ],
+        answer: 1,
+        explain: "Dual Core integra 2 núcleos físicos no chip; Quad Core integra 4 núcleos para maior paralelismo."
+    },
+    {
+        topic: "MEMÓRIA FLASH",
+        q: "Por que pendrives e cartões de memória utilizam tecnologia Flash em vez de RAM comum?",
+        options: [
+            "Porque a Flash é mais rápida que os registradores",
+            "Porque a Flash é não volátil e mantém os dados sem energia elétrica",
+            "Porque a Flash não precisa de barramento de dados",
+            "Porque a RAM só guarda texto"
+        ],
+        answer: 1,
+        explain: "A memória Flash preserva os dados mesmo quando desconectada da alimentação elétrica."
+    }
+];
+
+let quizIndex = 0;
+let quizPoints = 0;
+let quizStreak = 0;
+let quizStarted = false;
+let quizTimeLeft = 20;
+let quizTimerInterval = null;
+
+function startQuiz() {
+    quizStarted = true;
+    quizIndex = 0;
+    quizPoints = 0;
+    quizStreak = 0;
+    document.getElementById("quiz-summary").classList.add("hidden");
+    document.getElementById("quiz-body").classList.remove("hidden");
+    renderQuizQuestion();
+}
+
+function renderQuizQuestion() {
+    clearInterval(quizTimerInterval);
+    const total = ARQCOMP_QUIZ.length;
+
+    if (quizIndex >= total) {
+        finishQuiz();
+        return;
+    }
+
+    const qObj = ARQCOMP_QUIZ[quizIndex];
+    document.getElementById("quiz-progress").textContent = `${String(quizIndex + 1).padStart(2, "0")} / ${total}`;
+    document.getElementById("quiz-points").textContent = `${quizPoints} pts`;
+    document.getElementById("quiz-streak").textContent = `${quizStreak}x`;
+    document.getElementById("quiz-topic-badge").textContent = qObj.topic;
+    document.getElementById("quiz-question-text").textContent = qObj.q;
+
+    const expEl = document.getElementById("quiz-explanation");
+    expEl.classList.add("hidden");
+    document.getElementById("btn-next-question").classList.add("hidden");
+
+    const grid = document.getElementById("quiz-options-grid");
+    grid.innerHTML = "";
+
+    qObj.options.forEach((optText, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "quiz-opt-btn";
+        btn.textContent = optText;
+        btn.addEventListener("click", () => handleQuizAnswer(idx, btn));
+        grid.appendChild(btn);
+    });
+
+    quizTimeLeft = 20;
+    updateTimerUI();
+    quizTimerInterval = setInterval(() => {
+        quizTimeLeft--;
+        updateTimerUI();
+        if (quizTimeLeft <= 0) {
+            clearInterval(quizTimerInterval);
+            handleQuizTimeout();
+        }
+    }, 1000);
+}
+
+function updateTimerUI() {
+    document.getElementById("quiz-timer").textContent = `${quizTimeLeft}s`;
+    document.getElementById("quiz-timer-fill").style.width = `${(quizTimeLeft / 20) * 100}%`;
+}
+
+function handleQuizAnswer(chosenIdx, clickedBtn) {
+    clearInterval(quizTimerInterval);
+    const qObj = ARQCOMP_QUIZ[quizIndex];
+    const buttons = document.querySelectorAll(".quiz-opt-btn");
+    buttons.forEach((b) => (b.disabled = true));
+
+    if (chosenIdx === qObj.answer) {
+        clickedBtn.classList.add("is-correct");
+        quizStreak++;
+        quizPoints += 100 + quizTimeLeft * 5 + (quizStreak - 1) * 20;
+        sfx.ok();
+    } else {
+        clickedBtn.classList.add("is-wrong");
+        buttons[qObj.answer].classList.add("is-correct");
+        quizStreak = 0;
+        sfx.err();
+    }
+
+    document.getElementById("quiz-points").textContent = `${quizPoints} pts`;
+    document.getElementById("quiz-streak").textContent = `${quizStreak}x`;
+
+    const expEl = document.getElementById("quiz-explanation");
+    expEl.textContent = qObj.explain;
+    expEl.classList.remove("hidden");
+    document.getElementById("btn-next-question").classList.remove("hidden");
+}
+
+function handleQuizTimeout() {
+    const qObj = ARQCOMP_QUIZ[quizIndex];
+    const buttons = document.querySelectorAll(".quiz-opt-btn");
+    buttons.forEach((b) => (b.disabled = true));
+    buttons[qObj.answer].classList.add("is-correct");
+    quizStreak = 0;
+    sfx.err();
+
+    const expEl = document.getElementById("quiz-explanation");
+    expEl.textContent = `Tempo esgotado! ${qObj.explain}`;
+    expEl.classList.remove("hidden");
+    document.getElementById("btn-next-question").classList.remove("hidden");
+}
+
+function finishQuiz() {
+    sfx.win();
+    document.getElementById("quiz-body").classList.add("hidden");
+    document.getElementById("quiz-summary").classList.remove("hidden");
+    document.getElementById("quiz-final-desc").textContent =
+        `Você completou as ${ARQCOMP_QUIZ.length} questões sobre Arquitetura Computacional somando ${quizPoints} pontos.`;
+}
+
+document.getElementById("btn-next-question").addEventListener("click", () => {
+    sfx.tap();
+    quizIndex++;
+    renderQuizQuestion();
+});
+
+document.getElementById("btn-restart-quiz").addEventListener("click", () => {
+    sfx.tap();
+    startQuiz();
+});
+
+document.getElementById("btn-go-crossword").addEventListener("click", () => {
+    sfx.tap();
+    switchStage("crossword-stage");
+});
